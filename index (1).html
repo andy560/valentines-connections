@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connections - Our Memories</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'nyt-franklin', 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+            background: #f7f8f8;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            color: #1a1a1a;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+
+        .subtitle {
+            color: #565656;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .instructions {
+            text-align: center;
+            font-size: 14px;
+            color: #565656;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .completed-categories {
+            margin-bottom: 8px;
+        }
+
+        .category {
+            border-radius: 4px;
+            padding: 16px;
+            margin-bottom: 8px;
+            text-align: center;
+            animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .category-title {
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            margin-bottom: 6px;
+        }
+
+        .category-words {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* NYT Official colors */
+        .difficulty-easy { 
+            background: #f9df6d;
+            color: #1a1a1a;
+        }
+        .difficulty-medium { 
+            background: #a0c35a;
+            color: #1a1a1a;
+        }
+        .difficulty-hard { 
+            background: #b0c4ef;
+            color: #1a1a1a;
+        }
+        .difficulty-expert { 
+            background: #ba81c5;
+            color: #1a1a1a;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .word {
+            background: #efefe6;
+            border: none;
+            border-radius: 4px;
+            padding: 20px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-weight: 700;
+            font-size: 15px;
+            line-height: 1.2;
+            user-select: none;
+            text-transform: uppercase;
+            letter-spacing: 0.01em;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 76px;
+        }
+
+        .word:hover:not(.found) {
+            background: #e8e8df;
+        }
+
+        .word:active:not(.found) {
+            transform: scale(0.97);
+        }
+
+        .word.selected {
+            background: #5a594e;
+            color: #ffffff;
+        }
+
+        .word.found {
+            cursor: default;
+        }
+
+        .mistakes-remaining {
+            text-align: center;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #565656;
+            height: 20px;
+        }
+
+        .mistakes-dots {
+            display: inline-flex;
+            gap: 4px;
+            margin-left: 8px;
+        }
+
+        .mistake-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #1a1a1a;
+        }
+
+        .mistake-dot.used {
+            background: #d4d4d4;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 14px 16px;
+            border: 1px solid #1a1a1a;
+            background: white;
+            color: #1a1a1a;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: capitalize;
+            letter-spacing: 0.02em;
+            min-width: 90px;
+        }
+
+        button:hover:not(:disabled) {
+            background: #f7f8f8;
+        }
+
+        button:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        #submit-btn {
+            background: #1a1a1a;
+            color: white;
+        }
+
+        #submit-btn:hover:not(:disabled) {
+            background: #000000;
+        }
+
+        .message {
+            text-align: center;
+            padding: 12px;
+            margin-bottom: 16px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 14px;
+            display: none;
+            letter-spacing: 0.01em;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.error {
+            background: #fff;
+            color: #1a1a1a;
+            border: 1px solid #d4d4d4;
+        }
+
+        .message.one-away {
+            background: #fff9e6;
+            color: #1a1a1a;
+            border: 2px solid #f9df6d;
+            font-weight: 700;
+        }
+
+        .message.success {
+            background: #fff;
+            color: #1a1a1a;
+            border: 1px solid #d4d4d4;
+        }
+
+        .message.win {
+            background: #f9df6d;
+            color: #1a1a1a;
+            font-size: 16px;
+            padding: 24px;
+            font-weight: 700;
+        }
+
+        .hearts {
+            font-size: 20px;
+            margin: 8px 0;
+        }
+
+        .photo-button {
+            margin-top: 8px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .photo-button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            width: 800px;
+        }
+
+        .slideshow-container {
+            position: relative;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .slide {
+            display: none;
+            width: 100%;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        .slide img {
+            width: 100%;
+            height: auto;
+            display: block;
+            max-height: 70vh;
+            object-fit: contain;
+            background: #f7f8f8;
+        }
+
+        .slide-caption {
+            padding: 20px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            background: white;
+        }
+
+        .prev-btn, .next-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            font-size: 24px;
+            padding: 16px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.15s ease;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .prev-btn:hover, .next-btn:hover {
+            background: white;
+        }
+
+        .prev-btn {
+            left: 20px;
+        }
+
+        .next-btn {
+            right: 20px;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            font-size: 28px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: all 0.15s ease;
+            font-weight: 700;
+            color: #1a1a1a;
+            line-height: 1;
+            z-index: 10;
+        }
+
+        .close-modal:hover {
+            background: white;
+        }
+
+        .slide-counter {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 640px) {
+            .word {
+                font-size: 13px;
+                padding: 16px 6px;
+                min-height: 68px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            button {
+                font-size: 13px;
+                padding: 12px 14px;
+                min-width: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Connections</h1>
+            <p class="subtitle">💕 Our Special Memories Edition 💕<br>Happy Valentine's Day!</p>
+        </div>
+
+        <div class="instructions">
+            Create four groups of four!
+        </div>
+
+        <div id="completed-categories" class="completed-categories"></div>
+
+        <div id="grid" class="grid"></div>
+
+        <div class="mistakes-remaining" id="mistakes-container"></div>
+
+        <div class="buttons">
+            <button id="shuffle-btn">Shuffle</button>
+            <button id="deselect-btn">Deselect all</button>
+            <button id="submit-btn">Submit</button>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <!-- Photo Modal -->
+        <div id="photo-modal" class="modal">
+            <div class="modal-content">
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+                <div class="slideshow-container">
+                    <div id="slides"></div>
+                    <button class="prev-btn" onclick="changeSlide(-1)">❮</button>
+                    <button class="next-btn" onclick="changeSlide(1)">❯</button>
+                    <div class="slide-counter" id="slide-counter"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CUSTOMIZE YOUR GAME HERE!
+        // Replace these categories and words with your own memories
+        const gameData = {
+            categories: [
+                {
+                    name: "Landmarks we have photos in front of",
+                    difficulty: "easy",
+                    words: ["SAGRADA FAMILIA", "EIFFEL TOWER", "PARTHENON", "GOLDEN GATE BRIDGE"],
+                    hasPhotos: true,
+                    photos: [
+                        "https://i.imgur.com/placeholder1.jpg", // Replace with your Sagrada Familia photo URL
+                        "https://i.imgur.com/placeholder2.jpg", // Replace with your Eiffel Tower photo URL
+                        "https://i.imgur.com/placeholder3.jpg", // Replace with your Parthenon photo URL
+                        "https://i.imgur.com/placeholder4.jpg"  // Replace with your Golden Gate Bridge photo URL
+                    ]
+                },
+                {
+                    name: "Airport codes we've been to together",
+                    difficulty: "medium",
+                    words: ["MAD", "FNC", "BLQ", "RAK"]
+                },
+                {
+                    name: "My favorite nights out together",
+                    difficulty: "hard",
+                    words: ["DOM DOLLA", "RUDY'S", "STATE BIRD PROVISIONS", "NYE"]
+                },
+                {
+                    name: "Places we should go a 3rd time",
+                    difficulty: "expert",
+                    words: ["PICO DO ARIEIRO", "KIRBY COVE", "YOSEMITE", "MOUNT LYCABETTUS"],
+                    hasPhotos: true,
+                    photos: [
+                        "https://i.imgur.com/placeholder5.jpg", // Replace with your Pico do Arieiro photo URL
+                        "https://i.imgur.com/placeholder6.jpg", // Replace with your Kirby Cove photo URL
+                        "https://i.imgur.com/placeholder7.jpg", // Replace with your Yosemite photo URL
+                        "https://i.imgur.com/placeholder8.jpg"  // Replace with your Mount Lycabettus photo URL
+                    ]
+                }
+            ]
+        };
+
+        // Game state
+        let words = [];
+        let selectedWords = [];
+        let foundCategories = [];
+        let mistakes = 0;
+        const maxMistakes = 4;
+
+        // Initialize game
+        function initGame() {
+            // Flatten all words with their category info
+            gameData.categories.forEach((category, categoryIndex) => {
+                category.words.forEach(word => {
+                    words.push({
+                        text: word,
+                        categoryIndex: categoryIndex,
+                        categoryName: category.name,
+                        difficulty: category.difficulty
+                    });
+                });
+            });
+
+            shuffleWords();
+            renderGrid();
+            updateMistakesDisplay();
+        }
+
+        function shuffleWords() {
+            // Only shuffle words that haven't been found
+            const remainingWords = words.filter(w => 
+                !foundCategories.includes(w.categoryIndex)
+            );
+            
+            for (let i = remainingWords.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [remainingWords[i], remainingWords[j]] = [remainingWords[j], remainingWords[i]];
+            }
+            
+            // Update words array with shuffled remaining words
+            words = words.filter(w => foundCategories.includes(w.categoryIndex))
+                .concat(remainingWords);
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+
+            words.forEach((word, index) => {
+                if (!foundCategories.includes(word.categoryIndex)) {
+                    const wordDiv = document.createElement('div');
+                    wordDiv.className = 'word';
+                    wordDiv.textContent = word.text;
+                    wordDiv.dataset.index = index;
+                    wordDiv.addEventListener('click', () => toggleWord(index));
+                    grid.appendChild(wordDiv);
+                }
+            });
+        }
+
+        function toggleWord(index) {
+            const wordDiv = document.querySelector(`[data-index="${index}"]`);
+            
+            if (selectedWords.includes(index)) {
+                selectedWords = selectedWords.filter(i => i !== index);
+                wordDiv.classList.remove('selected');
+            } else {
+                if (selectedWords.length < 4) {
+                    selectedWords.push(index);
+                    wordDiv.classList.add('selected');
+                }
+            }
+
+            updateButtons();
+        }
+
+        function updateButtons() {
+            document.getElementById('submit-btn').disabled = selectedWords.length !== 4;
+            document.getElementById('deselect-btn').disabled = selectedWords.length === 0;
+        }
+
+        function deselectAll() {
+            selectedWords = [];
+            document.querySelectorAll('.word').forEach(w => w.classList.remove('selected'));
+            updateButtons();
+            hideMessage();
+        }
+
+        function checkSubmission() {
+            const selectedCategoryIndices = selectedWords.map(i => words[i].categoryIndex);
+            const firstCategory = selectedCategoryIndices[0];
+            
+            // Check if all selected words are from the same category
+            const isCorrect = selectedCategoryIndices.every(cat => cat === firstCategory);
+
+            if (isCorrect) {
+                handleCorrectGuess(firstCategory);
+            } else {
+                handleIncorrectGuess(selectedCategoryIndices);
+            }
+        }
+
+        function handleCorrectGuess(categoryIndex) {
+            const category = gameData.categories[categoryIndex];
+            foundCategories.push(categoryIndex);
+
+            // Add completed category display
+            const completedDiv = document.getElementById('completed-categories');
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = `category difficulty-${category.difficulty}`;
+            
+            let categoryHTML = `
+                <div class="category-title">${category.name}</div>
+                <div class="category-words">${category.words.join(', ').toUpperCase()}</div>
+            `;
+            
+            // Add "See Photos" button if this category has photos
+            if (category.hasPhotos) {
+                categoryHTML += `<button class="photo-button" onclick="openPhotoModal(${categoryIndex})">See Photos 📸</button>`;
+            }
+            
+            categoryDiv.innerHTML = categoryHTML;
+            completedDiv.appendChild(categoryDiv);
+
+            // Clear selection and re-render
+            selectedWords = [];
+            renderGrid();
+            updateMistakesDisplay();
+
+            // Check for win
+            if (foundCategories.length === gameData.categories.length) {
+                setTimeout(showWinMessage, 500);
+            }
+        }
+
+        function handleIncorrectGuess(selectedCategoryIndices) {
+            mistakes++;
+            updateMistakesDisplay();
+
+            // Check how close they were
+            const categoryCounts = {};
+            selectedCategoryIndices.forEach(cat => {
+                categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+            });
+            const maxMatch = Math.max(...Object.values(categoryCounts));
+
+            console.log('Category counts:', categoryCounts);
+            console.log('Max match:', maxMatch);
+
+            let message = 'Not quite right!';
+            let messageType = 'error';
+            if (maxMatch === 3) {
+                message = 'One away...';
+                messageType = 'one-away';
+            }
+
+            console.log('Message:', message, 'Type:', messageType);
+            showMessage(message, messageType);
+            deselectAll();
+
+            if (mistakes >= maxMistakes) {
+                setTimeout(showLoseMessage, 1000);
+            }
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type} show`;
+
+            // Keep "One away" message visible longer
+            const displayTime = type === 'one-away' ? 3000 : 2000;
+            
+            setTimeout(() => {
+                messageDiv.classList.remove('show');
+            }, displayTime);
+        }
+
+        function hideMessage() {
+            document.getElementById('message').classList.remove('show');
+        }
+
+        function showWinMessage() {
+            // Hide mistakes display
+            document.getElementById('mistakes-container').style.display = 'none';
+            
+            // Disable all buttons
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('shuffle-btn').disabled = true;
+            document.getElementById('deselect-btn').disabled = true;
+        }
+
+        function showLoseMessage() {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `
+                <div>Out of tries! But every moment with you is still perfect 💕</div>
+                <div style="font-size: 12px; margin-top: 8px; opacity: 0.8;">Refresh to try again!</div>
+            `;
+            messageDiv.className = 'message error show';
+            
+            // Disable submit button
+            document.getElementById('submit-btn').disabled = true;
+        }
+
+        function updateMistakesDisplay() {
+            const container = document.getElementById('mistakes-container');
+            
+            if (mistakes === 0) {
+                container.innerHTML = 'Mistakes remaining: <span class="mistakes-dots">' + 
+                    '<span class="mistake-dot"></span>'.repeat(maxMistakes) + 
+                    '</span>';
+            } else {
+                const dotsHtml = Array.from({length: maxMistakes}, (_, i) => 
+                    `<span class="mistake-dot ${i < mistakes ? 'used' : ''}"></span>`
+                ).join('');
+                container.innerHTML = 'Mistakes remaining: <span class="mistakes-dots">' + dotsHtml + '</span>';
+            }
+        }
+
+        // Event listeners
+        document.getElementById('shuffle-btn').addEventListener('click', () => {
+            shuffleWords();
+            renderGrid();
+            deselectAll();
+        });
+
+        document.getElementById('deselect-btn').addEventListener('click', deselectAll);
+        document.getElementById('submit-btn').addEventListener('click', checkSubmission);
+
+        // Start the game
+        initGame();
+
+        // Slideshow functionality
+        let currentSlideIndex = 0;
+        let currentCategoryPhotos = [];
+
+        function openPhotoModal(categoryIndex) {
+            const category = gameData.categories[categoryIndex];
+            if (!category.hasPhotos || !category.photos) return;
+
+            currentCategoryPhotos = category.photos;
+            currentSlideIndex = 0;
+
+            // Build slides
+            const slidesContainer = document.getElementById('slides');
+            slidesContainer.innerHTML = '';
+            
+            category.photos.forEach((photoUrl, index) => {
+                const slide = document.createElement('div');
+                slide.className = `slide ${index === 0 ? 'active' : ''}`;
+                slide.innerHTML = `
+                    <img src="${photoUrl}" alt="${category.words[index]}">
+                    <div class="slide-caption">${category.words[index]}</div>
+                `;
+                slidesContainer.appendChild(slide);
+            });
+
+            updateSlideCounter();
+            document.getElementById('photo-modal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('photo-modal').classList.remove('show');
+        }
+
+        function changeSlide(direction) {
+            const slides = document.querySelectorAll('.slide');
+            slides[currentSlideIndex].classList.remove('active');
+            
+            currentSlideIndex += direction;
+            
+            // Wrap around
+            if (currentSlideIndex >= currentCategoryPhotos.length) {
+                currentSlideIndex = 0;
+            } else if (currentSlideIndex < 0) {
+                currentSlideIndex = currentCategoryPhotos.length - 1;
+            }
+            
+            slides[currentSlideIndex].classList.add('active');
+            updateSlideCounter();
+        }
+
+        function updateSlideCounter() {
+            document.getElementById('slide-counter').textContent = 
+                `${currentSlideIndex + 1} / ${currentCategoryPhotos.length}`;
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('photo-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!document.getElementById('photo-modal').classList.contains('show')) return;
+            
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>
+</body>
+</html>
