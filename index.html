@@ -377,7 +377,7 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            background: rgba(255, 255, 255, 0.9);
+            background: transparent;
             border: none;
             font-size: 28px;
             width: 40px;
@@ -392,20 +392,11 @@
         }
 
         .close-modal:hover {
-            background: white;
+            transform: scale(1.1);
         }
 
         .slide-counter {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
+            display: none;
         }
 
         @media (max-width: 640px) {
@@ -809,7 +800,5 @@
             if (e.key === 'Escape') closeModal();
         });
     </script>
-</body>
-</html>
 </body>
 </html>
