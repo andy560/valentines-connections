@@ -287,6 +287,49 @@
             background: rgba(0, 0, 0, 0.2);
         }
 
+        /* Results display */
+        .results-container {
+            display: none;
+            text-align: center;
+            margin-top: 24px;
+            padding: 24px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .results-container.show {
+            display: block;
+        }
+
+        .results-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .guess-history {
+            margin: 24px auto;
+            max-width: 300px;
+        }
+
+        .guess-row {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 4px;
+            height: 32px;
+        }
+
+        .guess-cell {
+            flex: 1;
+            border-radius: 2px;
+        }
+
+        .guess-cell.yellow { background: #f9df6d; }
+        .guess-cell.green { background: #a0c35a; }
+        .guess-cell.blue { background: #b0c4ef; }
+        .guess-cell.purple { background: #ba81c5; }
+        .guess-cell.gray { background: #d4d4d4; }
+
         /* Modal styles */
         .modal {
             display: none;
@@ -443,6 +486,12 @@
 
         <div id="message" class="message"></div>
 
+        <!-- Results display -->
+        <div id="results-container" class="results-container">
+            <div class="results-title">Great!</div>
+            <div class="guess-history" id="guess-history"></div>
+        </div>
+
         <!-- Photo Modal -->
         <div id="photo-modal" class="modal">
             <div class="modal-content">
@@ -475,12 +524,12 @@
                     ]
                 },
                 {
-                    name: "Airport codes we've been to together",
+                    name: "Airport codes where we've traveled together",
                     difficulty: "medium",
                     words: ["MAD", "FNC", "BLQ", "RAK"]
                 },
                 {
-                    name: "My favorite nights out together",
+                    name: "Memorable nights out together",
                     difficulty: "hard",
                     words: ["DOM DOLLA", "RUDY'S", "STATE BIRD PROVISIONS", "NYE"]
                 },
@@ -499,12 +548,21 @@
             ]
         };
 
+        // Map difficulty to color for guess history
+        const difficultyColors = {
+            'easy': 'yellow',
+            'medium': 'green',
+            'hard': 'blue',
+            'expert': 'purple'
+        };
+
         // Game state
         let words = [];
         let selectedWords = [];
         let foundCategories = [];
         let mistakes = 0;
         const maxMistakes = 4;
+        let guessHistory = []; // Track each guess
 
         // Initialize game
         function initGame() {
@@ -609,6 +667,11 @@
             const category = gameData.categories[categoryIndex];
             foundCategories.push(categoryIndex);
 
+            // Record this guess in history - all 4 tiles are the same color since it's correct
+            const selectedDifficulties = selectedWords.map(i => words[i].difficulty);
+            const guessColors = selectedDifficulties.map(diff => difficultyColors[diff]);
+            guessHistory.push(guessColors);
+
             // Add completed category display
             const completedDiv = document.getElementById('completed-categories');
             const categoryDiv = document.createElement('div');
@@ -640,6 +703,11 @@
 
         function handleIncorrectGuess(selectedCategoryIndices) {
             mistakes++;
+            
+            // Record this guess in history - show actual colors of tiles picked
+            const selectedDifficulties = selectedWords.map(i => words[i].difficulty);
+            const guessColors = selectedDifficulties.map(diff => difficultyColors[diff]);
+            guessHistory.push(guessColors);
             
             // Check how close they were
             const categoryCounts = {};
@@ -694,13 +762,33 @@
         }
 
         function showWinMessage() {
-            // Hide mistakes display
+            // Hide game elements
+            document.getElementById('grid').style.display = 'none';
             document.getElementById('mistakes-container').style.display = 'none';
+            document.querySelector('.buttons').style.display = 'none';
+            document.getElementById('message').style.display = 'none';
             
-            // Disable all buttons
-            document.getElementById('submit-btn').disabled = true;
-            document.getElementById('shuffle-btn').disabled = true;
-            document.getElementById('deselect-btn').disabled = true;
+            // Show results
+            displayGuessHistory();
+            document.getElementById('results-container').classList.add('show');
+        }
+
+        function displayGuessHistory() {
+            const historyContainer = document.getElementById('guess-history');
+            historyContainer.innerHTML = '';
+            
+            guessHistory.forEach(guess => {
+                const row = document.createElement('div');
+                row.className = 'guess-row';
+                
+                guess.forEach(color => {
+                    const cell = document.createElement('div');
+                    cell.className = `guess-cell ${color}`;
+                    row.appendChild(cell);
+                });
+                
+                historyContainer.appendChild(row);
+            });
         }
 
         function showLoseMessage() {
@@ -710,6 +798,11 @@
                 <div style="font-size: 12px; margin-top: 8px; opacity: 0.8;">Refresh to try again!</div>
             `;
             messageDiv.className = 'message error show';
+            
+            // Keep lose message visible for 5 seconds instead of 2
+            setTimeout(() => {
+                messageDiv.classList.remove('show');
+            }, 5000);
             
             // Disable submit button
             document.getElementById('submit-btn').disabled = true;
